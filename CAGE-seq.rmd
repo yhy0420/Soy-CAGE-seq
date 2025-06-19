@@ -6,7 +6,7 @@ library(dplyr)
 
 setwd("/home/yanghy/my_data/SangData/CAGE-seq/RX2024-06016-G/seqkit/result_new/05.cager/")
 
-## 1. 输入BAM文件
+## 1. Creating a CAGEexp object
 pathsToInputFiles <- list.files(
   "/home/yanghy/my_data/SangData/CAGE-seq/RX2024-06016-G/seqkit/result_new/05.cager/bam", 
   full.names = TRUE,
@@ -15,7 +15,6 @@ pathsToInputFiles <- list.files(
 
 samples <- c("Root_1", "Root_2", "Shoot_1", "Shoot_2")
 
-## 2. 创建CAGEexp对象
 CAGEset_Gmax <- CAGEexp(
   genomeName = "BSgenome.Glycine.max.T2T",
   inputFiles = pathsToInputFiles,
@@ -23,15 +22,11 @@ CAGEset_Gmax <- CAGEexp(
   sampleLabels = samples
 )
 
-### 查看对象信息
-CAGEset_Gmax
-colData(CAGEset_Gmax)
-
-## 3. 提取CTSS数据
+## 2. 提取CTSS数据
 ce <- getCTSS(CAGEset_Gmax)
 CTSStagCountSE(ce)
 
-# 导出坐标文件
+### 导出坐标文件
 Gly_max_coordinate <- CTSScoordinatesGR(ce)
 write.table(
   Gly_max_coordinate, 
@@ -42,7 +37,7 @@ write.table(
   col.names = TRUE
 )
 
-# 导出表达量数据
+### 导出表达量数据
 Gly_max_expression <- CTSStagCountDF(ce)
 write.table(
   Gly_max_expression, 
@@ -53,7 +48,7 @@ write.table(
   col.names = TRUE
 )
 
-# 为每个样本导出CTSS计数
+### 为每个样本导出CTSS计数
 sample_names <- c("Root_1", "Root_2", "Shoot_1", "Shoot_2")
 for (i in seq_along(sample_names)) {
   count_data <- CTSStagCountGR(ce, i)
@@ -68,8 +63,8 @@ for (i in seq_along(sample_names)) {
   )
 }
 
-## 4. 注释和相关性分析
-# 导入GFF注释文件
+## 3. 注释和相关性分析
+### 导入GFF注释文件
 gff_path <- "/home/yanghy/my_data/SangData/CAGE-seq/RX2024-06016-G/seqkit/15-50/clean/T2T/bowtie2/Ref/Glymax_cage.gff"
 Gly_max_anno <- import(gff_path)
 Gly_max_anno$transcript_type <- "protein_coding"
@@ -79,12 +74,11 @@ Gly_max_anno$gene_name <- Rle(Gly_max_anno$gene_name)
 Gly_max_anno <- Gly_max_anno[which(Gly_max_anno$type %in% c("exon", "gene", "transcript")), ]
 Gly_max_anno_1 <- Gly_max_anno[, c(9, 14, 2)]
 
-# 注释CTSS
+### 注释CTSS
 ce_anno <- annotateCTSS(ce, Gly_max_anno_1, upstream = 1000, downstream = 500)
-
 colData(ce_anno)[, c("librarySizes", "promoter", "exon", "intron", "unknown")]
 
-# 绘制注释分布图
+### 绘制注释分布图
 pdf( "Glymax_anno_1000.pdf", width = 6, height = 4, pointsize = 12)
 plotAnnot(x = ce_anno, scope = "counts") + 
   ggplot2::theme_bw() + 
@@ -92,7 +86,7 @@ plotAnnot(x = ce_anno, scope = "counts") +
   ggplot2::theme(panel.grid = element_blank())
 dev.off()
 
-# 绘制样本相关性图
+## 4. 绘制样本相关性图
 pdf( "Gly_max_correlation.pdf", width = 10, height = 9, pointsize = 12)
 corr.m <- plotCorrelation2(
   ce_anno, 
