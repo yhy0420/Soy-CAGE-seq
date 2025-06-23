@@ -22,11 +22,10 @@ CAGEset_Gmax <- CAGEexp(
   sampleLabels = samples
 )
 
-## 2. 提取CTSS数据
 ce <- getCTSS(CAGEset_Gmax)
 CTSStagCountSE(ce)
 
-### 导出坐标文件
+### CTSS coordinates
 Gly_max_coordinate <- CTSScoordinatesGR(ce)
 write.table(
   Gly_max_coordinate, 
@@ -37,7 +36,7 @@ write.table(
   col.names = TRUE
 )
 
-### 导出表达量数据
+### Expression data
 Gly_max_expression <- CTSStagCountDF(ce)
 write.table(
   Gly_max_expression, 
@@ -48,7 +47,7 @@ write.table(
   col.names = TRUE
 )
 
-### 为每个样本导出CTSS计数
+### Export CTSS counts for each sample
 sample_names <- c("Root_1", "Root_2", "Shoot_1", "Shoot_2")
 for (i in seq_along(sample_names)) {
   count_data <- CTSStagCountGR(ce, i)
@@ -63,8 +62,7 @@ for (i in seq_along(sample_names)) {
   )
 }
 
-## 3. 注释和相关性分析
-### 导入GFF注释文件
+## 2. Genome annotations
 gff_path <- "/home/yanghy/my_data/SangData/CAGE-seq/RX2024-06016-G/seqkit/15-50/clean/T2T/bowtie2/Ref/Glymax_cage.gff"
 Gly_max_anno <- import(gff_path)
 Gly_max_anno$transcript_type <- "protein_coding"
@@ -73,12 +71,9 @@ Gly_max_anno$type <- Rle(Gly_max_anno$type)
 Gly_max_anno$gene_name <- Rle(Gly_max_anno$gene_name)
 Gly_max_anno <- Gly_max_anno[which(Gly_max_anno$type %in% c("exon", "gene", "transcript")), ]
 Gly_max_anno_1 <- Gly_max_anno[, c(9, 14, 2)]
-
-### 注释CTSS
 ce_anno <- annotateCTSS(ce, Gly_max_anno_1, upstream = 1000, downstream = 500)
 colData(ce_anno)[, c("librarySizes", "promoter", "exon", "intron", "unknown")]
 
-### 绘制注释分布图
 pdf( "Glymax_anno_1000.pdf", width = 6, height = 4, pointsize = 12)
 plotAnnot(x = ce_anno, scope = "counts") + 
   ggplot2::theme_bw() + 
@@ -86,7 +81,7 @@ plotAnnot(x = ce_anno, scope = "counts") +
   ggplot2::theme(panel.grid = element_blank())
 dev.off()
 
-## 4. 绘制样本相关性图
+## 3. Sample Correlation
 pdf( "Gly_max_correlation.pdf", width = 10, height = 9, pointsize = 12)
 corr.m <- plotCorrelation2(
   ce_anno, 
@@ -98,88 +93,35 @@ corr.m <- plotCorrelation2(
 )
 dev.off()
 
-## 5. 合并样本
+## 4. Merging of replicates
 ce_merge <- mergeSamples(
   ce_anno, 
   mergeIndex = c(1, 1, 2, 2),
   mergedSampleLabels = c("Root", "Shoot")
 )
-
-# 重新注释合并后的样本
 ce_merge <- annotateCTSS(ce_merge, Gly_max_anno_1)
 
-# 导出合并后的CTSS数据
 CTSS_Root <- CTSStagCountGR(ce_merge, 1)
-write.table(
-  CTSS_Root, 
-  file = "Glymax_CTSS_Root.txt", 
-  sep = "\t", 
-  row.names = FALSE, 
-  quote = FALSE,
-  col.names = TRUE
-)
-
 CTSS_Shoot <- CTSStagCountGR(ce_merge, 2)
-write.table(
-  CTSS_Shoot, 
-  file = "Glymax_CTSS_Shoot.txt", 
-  sep = "\t", 
-  row.names = FALSE, 
-  quote = FALSE,
-  col.names = TRUE
-)
 
-# 绘制累积分布图
+## 5. Normalization
 pdf( "sample_fenbu30.pdf", width = 6, height = 6, pointsize = 12)
 plotReverseCumulatives(ce_merge, fitInRange = c(5, 10000), onePlot = TRUE)
 dev.off()
 
-## 6. 标准化
 ce_normal <- normalizeTagCount(
   ce_merge,
   method = "powerLaw",
   fitInRange = c(5, 10000),
   alpha = 1.18,
-  T = 10*10^5  # 等同于1e6
+  T = 10*10^5 
 )
 
-# 查看标准化后的矩阵
-ce_normal[["tagCountMatrix"]]
-CTSSnormalizedTpmDF(ce_normal)
-
-# 导出标准化后的TPM值
 CTSS_TPM <- CTSSnormalizedTpmDF(ce_normal)
-write.table(
-  CTSS_TPM, 
-  file = "Gm_CTSS_TPM.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE,
-  col.names = TRUE
-)
-
-# 为每个合并的样本导出TPM值
 CTSS_Root_TPM <- CTSSnormalizedTpmGR(ce_normal, 1)
-write.table(
-  CTSS_Root_TPM, 
-  file = "Root_CTSS_TPM.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE,
-  col.names = TRUE
-)
-
 CTSS_Shoot_TPM <- CTSSnormalizedTpmGR(ce_normal, 2)
-write.table(
-  CTSS_Shoot_TPM, 
-  file = "Shoot_CTSS_TPM.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE,
-  col.names = TRUE
-)
 
-## 7. 聚类分析
+## 6. CTSS clustering
 TC <- clusterCTSS(
   ce_normal,
   threshold = 1,
@@ -191,44 +133,19 @@ TC <- clusterCTSS(
   keepSingletonsAbove = 1
 )
 
-# 导出标签聚类结果
 rootend_TC <- tagClustersGR(TC, sample = "Root")
-write.table(
-  rootend_TC, 
-  file = "Root_TC.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE
-)
-
 plantshoot_TC <- tagClustersGR(TC, sample = "Shoot")
-write.table(
-  plantshoot_TC, 
-  file = "Shoot_TC.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE
-)
 
-# 计算四分位宽度
+## 7. Promoter width
 TC_width <- cumulativeCTSSdistribution(TC, clusters = "tagClusters", useMulticore = TRUE)
 TC_width <- quantilePositions(TC_width, clusters = "tagClusters", qLow = 0.1, qUp = 0.9)
 
-# 导出包含宽度信息的标签聚类
 rootend_width_tag <- tagClustersGR(
   TC_width, 
   "Root",
   returnInterquantileWidth = TRUE,
   qLow = 0.1,
   qUp = 0.9
-)
-
-write.table(
-  rootend_width_tag, 
-  file = "Root_width_tag.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE
 )
 
 plantshoot_width_tag <- tagClustersGR(
@@ -239,15 +156,6 @@ plantshoot_width_tag <- tagClustersGR(
   qUp = 0.9
 )
 
-write.table(
-  plantshoot_width_tag, 
-  file = "Shoot_width_tag.txt", 
-  sep = "\t", 
-  row.names = FALSE,
-  quote = FALSE
-)
-
-# 绘制四分位宽度分布图
 pdf("TC_width_quant.pdf", width = 6, height = 4, pointsize = 12)
 plotInterquantileWidth(
   TC_width, 
@@ -261,7 +169,7 @@ plotInterquantileWidth(
   ggplot2::theme(panel.grid = element_blank())
 dev.off()
 
-# 导出BED轨道
+### Track export for genome browsers
 iqtrack <- exportToTrack(
   TC_width, 
   what = "tagClusters", 
