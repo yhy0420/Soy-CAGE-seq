@@ -9,3 +9,5 @@ Data processing and CAGEr analysis
 'anno_Soy_TSS.R' corrects GFF files based on transcription start sites (TSS) identified from CAGE-seq data. GFF3 file as input file.
 
 'shape.py' is used to process promoter region and transcription start site (TSS) data, and classify promoters based on information entropy (Shannon index, SI).
+
+
