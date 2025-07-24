@@ -1,13 +1,16 @@
-# Soy-CAGE-seq
-## Scripts for analyzing soybean CAGE data
-Data processing and CAGEr analysis
+ Soy-CAGE-seq
+## Scripts for analyzing soybean nanoCAGE data
 
-'CAGE-alignment.sh' is used to process CAGE-seq data, including adapter removal, rRNA filtering, chloroplast and mitochondrial contamination removal, and genome alignment. The final output is a BAM file, which is used for subsequent TSS (transcription start site) analysis.
+'01.CAGE-alignment.sh' is used to process nanoCAGE-seq data, including adapter removal, rRNA, chloroplast and mitochondrial read filtering, and reads mapping. The final output is a BAM file, which is used for subsequent TSS (transcription start site) identification.
 
-'CAGEr.rmd' uses the CAGEr package to process CAGE-seq data.
+'02.CAGEr.rmd' uses the CAGEr package to identify transcription start sites (TSSs) and profiling.
 
-'anno_Soy_TSS.R' corrects GFF files based on transcription start sites (TSS) identified from CAGE-seq data. GFF3 file as input file.
+The four bw files are normalized reads depth profiling in bigwig format, which could be virtualized using tools such as [IGV](https://igv.org/). 
 
-'shape.py' is used to process promoter region and transcription start site (TSS) data, and classify promoters based on information entropy (Shannon index, SI).
+Root_TC.bed and Shoot_TC.bed are the annotated CTSSs.
 
+Root_TC.gff3 and Shoot_TC.gff3 are the annotated dominant CTSSs.
 
+'03.anno_Soy_TSS.R' complements the published genome annotation with TSSs identified from nanoCAGE-seq data.
+
+'04.shape.py' is used to process promoter region and identified TSSs, and classify promoters based on information entropy (Shannon index, SI).
