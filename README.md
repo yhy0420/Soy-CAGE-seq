@@ -5,12 +5,12 @@
 
 '02.CAGEr.rmd' uses the CAGEr package to identify transcription start sites (TSSs) and profiling.
 
+'03.anno_Soy_TSS.R' complements the published genome annotation with TSSs identified from nanoCAGE-seq data.
+
+'04.shape.py' is used to process promoter region and identified TSSs, and classify promoters based on information entropy (Shannon index, SI).
+
 The four bw files are normalized reads depth profiling in bigwig format, which could be virtualized using tools such as [IGV](https://igv.org/). 
 
 Root_TC.bed and Shoot_TC.bed are the annotated CTSSs.
 
 Root_TC.gff3 and Shoot_TC.gff3 are the annotated dominant CTSSs.
-
-'03.anno_Soy_TSS.R' complements the published genome annotation with TSSs identified from nanoCAGE-seq data.
-
-'04.shape.py' is used to process promoter region and identified TSSs, and classify promoters based on information entropy (Shannon index, SI).
