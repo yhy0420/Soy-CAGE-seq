@@ -9,7 +9,7 @@
 
 '04.shape.py' is used to process promoter region and identified TSSs, and classify promoters based on information entropy (Shannon index, SI).
 
-The four bw files are normalized reads depth profiling in bigwig format, which could be virtualized using tools such as [IGV](https://igv.org/). 
+The four bw files are read mapping deapth profiling in bigwig format, which could be virtualized using tools such as [IGV](https://igv.org/). 
 
 Root_TC.bed and Shoot_TC.bed are the annotated CTSSs.
 
